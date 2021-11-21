@@ -1,117 +1,115 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>The Letter N</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'>
+	<title>The greatest letter of all...</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main.css">
 </head>
 
-<body style="background-color: #000;">
+<body>
+<div id="info">The Letter N</div>
+<script type="module">
 
-<script src="js/threejs/build/three.js"></script>
+	import * as THREE from './three.js/build/three.module.js';
 
-<script src="js/threejs/js/controls/TrackballControls.js"></script>
-<script src="js/threejs/js/effects/AsciiEffect.js"></script>
-<script src="js/threejs/js/loaders/STLLoader.js"></script>
+	import {AsciiEffect} from './jsm/effects/AsciiEffect.js';
+	import {TrackballControls} from './jsm/controls/TrackballControls.js';
+	import { STLLoader } from './jsm/loaders/STLLoader.js';
 
-<script src="js/threejs/WebGL.js"></script>
+	let camera, controls, scene, renderer, effect;
 
-<script>
-    if (WEBGL.isWebGLAvailable() === false) {
-        document.body.appendChild(WEBGL.getWebGLErrorMessage());
-    }
+	let plane, letterN;
 
-    var camera, scene, renderer, effect;
-    var controls;
-    var sword, plane;
-    var start = Date.now();
-    var rotationAmplitude;
+	const start = Date.now();
 
-    init();
-    animate();
+	init();
+	animate();
 
-    function init() {
-        camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 1, 4000);
+	function init() {
 
-        rotationAmplitude = 550;
+		camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 2000);
+		camera.position.y = 0;
+		camera.position.z = 500;
 
-        camera.position.x = -200;
-        camera.position.y = 0;
-        camera.position.z = 0;
+		scene = new THREE.Scene();
+		scene.background = new THREE.Color(0, 0, 0);
 
-        controls = new THREE.TrackballControls(camera);
+		const pointLight1 = new THREE.PointLight(0xffffff);
+		pointLight1.position.set(500, 500, 500);
+		scene.add(pointLight1);
 
-        scene = new THREE.Scene();
+		const pointLight2 = new THREE.PointLight(0xffffff, 0.25);
+		pointLight2.position.set(-500, -500, -500);
+		scene.add(pointLight2);
 
-        var light = new THREE.PointLight(0xffffff);
-        light.position.set(0, 0, 0);
-        scene.add(light);
+		const loader = new STLLoader();
+		loader.load( './models/stl/ascii/nintendo-n-v1.stl', function ( geometry ) {
 
-        var light = new THREE.PointLight(0xffffff, 0.25);
-        light.position.set(-500, -500, -500);
-        scene.add(light);
+			const material = new THREE.MeshPhongMaterial( { color: 0xfb2e01, specular: 0x111111, shininess: 200 } );
+			const mesh = new THREE.Mesh( geometry, material );
 
-        // Load sword STL file
-        var loader = new THREE.STLLoader();
-        var material = new THREE.MeshPhongMaterial({color: 0xAAAAAA, specular: 0x111111, shininess: 200});
+			mesh.position.set( 0, 0, 0 )
+			mesh.rotation.set( - Math.PI / 2, 0, 0 );
+			mesh.scale.set( 5, 5, 5 );
 
-        loader.load('js/threejs/models/stl/binary/letter-n-2.stl', function (geometry) {
-            var mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(100, -25, -20);
-            mesh.rotation.set(-Math.PI / 2, -Math.PI / 2, -Math.PI / 2);
-            mesh.scale.set(5, 5, 5);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+			mesh.castShadow = true;
+			mesh.receiveShadow = true;
 
-            scene.add(mesh);
+			scene.add( mesh );
 
-        })
+		} );
 
-        renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer = new THREE.WebGLRenderer();
+		renderer.setSize(window.innerWidth, window.innerHeight);
 
-        effect = new THREE.AsciiEffect(renderer, '.:;-+*=%@ ', {invert: true});
-        effect.setSize(window.innerWidth, window.innerHeight);
-        effect.domElement.style.color = 'black';
-        effect.domElement.style.backgroundColor = 'white';
+		effect = new AsciiEffect(renderer, '/|(){}[]?-_+~<>!:,"^`. ', {invert: false});
+		effect.setSize(window.innerWidth, window.innerHeight);
+		effect.domElement.style.color = 'white';
+		effect.domElement.style.backgroundColor = 'black';
 
-        // Special case: append effect.domElement, instead of renderer.domElement.
-        // AsciiEffect creates a custom domElement (a div container) where the ASCII elements are placed.
-        document.body.appendChild(effect.domElement);
-        //
-        window.addEventListener('resize', onWindowResize, false);
-    }
+		// Special case: append effect.domElement, instead of renderer.domElement.
+		// AsciiEffect creates a custom domElement (a div container) where the ASCII elements are placed.
 
-    function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+		document.body.appendChild(effect.domElement);
 
-        renderer.setSize(window.innerWidth, window.innerHeight);
+		controls = new TrackballControls(camera, effect.domElement);
 
-        effect.setSize(window.innerWidth, window.innerHeight);
-    }
+		window.addEventListener('resize', onWindowResize);
 
-    //
-    function animate() {
-        requestAnimationFrame(animate);
-        render();
-    }
+	}
 
-    function render() {
-        var timer = Date.now() * 0.00065;
+	function onWindowResize() {
 
-        //Allow User scroll
-        rotationAmplitude = Math.sqrt(Math.pow(camera.position.x, 2) + Math.pow(camera.position.z, 2));
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
 
-        controls.update();
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		effect.setSize(window.innerWidth, window.innerHeight);
 
-        effect.render(scene, camera);
-    }
+	}
+
+	//
+
+	function animate() {
+
+		requestAnimationFrame(animate);
+
+		render();
+
+	}
+
+	function render() {
+
+		const timer = Date.now() - start;
+
+		controls.update();
+
+		effect.render(scene, camera);
+
+	}
+
 </script>
+
 </body>
 </html>
